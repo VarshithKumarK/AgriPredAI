@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+
 // Assuming you have 'toast' available globally or imported in your main App.jsx
 const toast = { error: (msg) => console.log("Toast Error:", msg), success: (msg) => console.log("Toast Success:", msg) }; 
 
@@ -12,6 +15,7 @@ function ImageClassifier() {
     const [file, setFile] = useState(null);
     const [prediction, setPrediction] = useState("");
     const [loading, setLoading] = useState(false);
+    const [cure, setCure] = useState(null); // { symptoms, cure, prevention }
     const [previewUrl, setPreviewUrl] = useState(null);
     const [predictionStatus, setPredictionStatus] = useState(null); // 'success', 'error', 'loading', null
 
@@ -20,6 +24,7 @@ function ImageClassifier() {
         if (selectedFile) {
             setFile(selectedFile);
             setPrediction("");
+            setCure(null);
             setPredictionStatus(null);
             // Create a local URL for image preview
             setPreviewUrl(URL.createObjectURL(selectedFile));
@@ -48,7 +53,7 @@ function ImageClassifier() {
 
         try {
             // --- NOTE: This is your original endpoint logic ---
-            const response = await fetch("http://localhost:5000/predict", {
+            const response = await fetch("http://127.0.0.1:8000/predict", {
                 method: "POST",
                 body: formData,
             });
@@ -57,10 +62,33 @@ function ImageClassifier() {
             
             if (response.ok && data.prediction) {
                 setPrediction(data.prediction);
+                setCure(data.cure_info);
                 setPredictionStatus('success');
                 toast.success("Classification complete!");
+
+                // Save to Backend Logbook
+                try {
+                    const saveFormData = new FormData();
+                    saveFormData.append("image", file);
+                    saveFormData.append("diseaseDetected", data.prediction);
+                    saveFormData.append("confidenceScore", 0.95); // Mocked for now
+                    saveFormData.append("plantType", "Unknown");
+                    // Assuming backend can handle cureInfo in some way if we wanted to save it, 
+                    // but for now we just save the basic info
+                    
+                    await axios.post("http://localhost:5000/api/predictions/save", saveFormData, {
+                        headers: { "Content-Type": "multipart/form-data" },
+                        withCredentials: true
+                    });
+                    toast.success("Saved to Logbook!");
+                } catch (saveError) {
+                    console.error("Save error:", saveError);
+                    toast.error("Failed to save to logbook");
+                }
+
             } else {
                 setPrediction("Prediction unavailable or model error.");
+                setCure(null);
                 setPredictionStatus('error');
                 toast.error(data.prediction || "Model returned an error.");
             }
@@ -87,7 +115,7 @@ function ImageClassifier() {
 
 
     return (
-        <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4 pt-20">
+        <div className="h-screen w-full bg-gray-950 overflow-y-auto flex flex-col items-center p-4 pt-24 custom-scrollbar">
             {/* Main Classifier Card (Glassmorphic) */}
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -170,19 +198,46 @@ function ImageClassifier() {
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className={`mt-8 p-6 rounded-xl border-2 shadow-lg mx-auto max-w-lg ${getPredictionStyle()}`}
+                        className={`mt-8 p-6 rounded-xl border-2 shadow-lg mx-auto max-w-3xl w-full ${getPredictionStyle()}`}
                     >
-                        <h3 className="text-3xl font-extrabold mb-2 flex items-center justify-center gap-3">
+                        <h3 className="text-3xl font-extrabold mb-4 flex items-center justify-center gap-3 border-b border-lime-500/30 pb-4">
                             {predictionStatus === 'success' ? <CheckIcon /> : <ErrorIcon />}
-                            Result
+                            Result: {prediction}
                         </h3>
-                        <p className="text-xl font-semibold break-words">
-                            {prediction}
-                        </p>
+
+                        {/* AI Cure Section */}
+                        {predictionStatus === 'success' && cure && (
+                            <div className="text-left space-y-6 mt-4">
+                                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                                    <h4 className="text-xl font-bold text-lime-400 mb-2">🔍 Symptoms</h4>
+                                    <p className="text-gray-300">{cure.symptoms || "Analyzing symptoms..."}</p>
+                                </div>
+
+                                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                                    <h4 className="text-xl font-bold text-lime-400 mb-2">💊 Cure & Treatment</h4>
+                                    <p className="text-gray-300 whitespace-pre-wrap">{cure.cure || "Check back for treatment options."}</p>
+                                </div>
+
+                                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                                    <h4 className="text-xl font-bold text-lime-400 mb-2">🛡️ Prevention</h4>
+                                    <p className="text-gray-300">{cure.prevention || "Keep plants healthy."}</p>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4 mt-6 pt-6 border-t border-gray-700">
+                                    <Link to="/chat" className="flex-1 bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-center flex items-center justify-center gap-2">
+                                        Ask AI Assistant More
+                                    </Link>
+                                    <Link to="/logbook" className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition text-center flex items-center justify-center gap-2">
+                                        View Full Logbook
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
-
             </motion.div>
+
+
         </div>
     );
 }

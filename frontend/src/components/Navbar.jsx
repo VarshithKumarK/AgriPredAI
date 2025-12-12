@@ -50,6 +50,24 @@ const Navbar = () => {
               <span className="absolute left-0 -bottom-1 w-0 group-hover:w-full h-[3px] bg-lime-500 transition-all duration-300"></span>
             </Link>
           </li>
+          <li>
+            <Link
+              to="/logbook"
+              className="relative text-2xl font-semibold text-gray-300 hover:text-lime-400 transition group"
+            >
+              Logbook
+              <span className="absolute left-0 -bottom-1 w-0 group-hover:w-full h-[3px] bg-lime-500 transition-all duration-300"></span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/chat"
+              className="relative text-2xl font-semibold text-gray-300 hover:text-lime-400 transition group"
+            >
+              AI Chat
+              <span className="absolute left-0 -bottom-1 w-0 group-hover:w-full h-[3px] bg-lime-500 transition-all duration-300"></span>
+            </Link>
+          </li>
 
           {user && (
             <>
@@ -121,6 +139,20 @@ const Navbar = () => {
           className="hover:text-lime-400 transition"
         >
           Predict Diseases
+        </Link>
+        <Link
+          to="/logbook"
+          onClick={() => setMenuOpen(false)}
+          className="hover:text-lime-400 transition"
+        >
+          Logbook
+        </Link>
+        <Link
+          to="/chat"
+          onClick={() => setMenuOpen(false)}
+          className="hover:text-lime-400 transition"
+        >
+          AI Chat
         </Link>
 
         {user ? (

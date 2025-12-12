@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
+import CropLogbook from "./pages/CropLogbook";
+import OllamaChat from "./pages/OllamaChat";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/predict" element={<ImageClassifier/>} />
+          <Route path="/logbook" element={<CropLogbook />} />
+          <Route path="/chat" element={<OllamaChat />} />
         </Routes>
       </AnimatePresence>
     </AuthProvider>

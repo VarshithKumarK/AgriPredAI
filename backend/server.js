@@ -18,7 +18,11 @@ app.use(
   })
 );
 
+import predictionRoutes from "./routes/predictionRoute.js";
+
 app.use("/api/auth", authRoutes);
+app.use("/api/predictions", predictionRoutes);
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
